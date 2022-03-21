@@ -25,12 +25,45 @@
     <h1>{{ article.author }}</h1>
     <h3>{{ article.title }}</h3>
     <p>{{ article.content }}</p>
+    <p>
+        {% if user.is_authenticated %}
+            {% if not article.is_fan %}
+                <button name="article-like" data-element-id="total-likes-article-{{ article.pk }}"
+                        data-request-url="{% url 'webapp:article_like' article.pk %}"
+                        data-is-liked="false">Лайк
+                </button>
+            {% else %}
+                <button name="article-like" data-element-id="total-likes-article-{{ article.pk }}"
+                        data-request-url="{% url 'webapp:article_like' article.pk %}"
+                        data-is-liked="true">Дизлайк
+                </button>
+            {% endif %}
+        {% endif %}
+        Лайков: <span id="total-likes-article-{{ article.pk }}">{{ article.total_likes }}</span>
+    </p>
     <br>
-    <h3>Комментарии</h3>
+    <h3>Комментарии:</h3>
     {% for comment in comments %}
         <span>{{ forloop.counter }}</span>
         <p>{{ comment.author }}</p>
         <p>{{ comment.content }}</p>
+
+        <p>
+            {% if user.is_authenticated %}
+                {% if not comment.is_fan %}
+                    <button name="comment-like" data-element-id="total-likes-comment-{{ comment.pk }}"
+                            data-request-url="{% url 'webapp:comment_like' comment.pk %}"
+                            data-is-liked="false">Лайк
+                    </button>
+                {% else %}
+                    <button name="comment-like" data-element-id="total-likes-comment-{{ comment.pk }}"
+                            data-request-url="{% url 'webapp:comment_like' comment.pk %}"
+                            data-is-liked="true">Дизлайк
+                    </button>
+                {% endif %}
+            {% endif %}
+            Лайков: <span id="total-likes-comment-{{ comment.pk }}">{{ comment.total_likes }}</span>
+        </p>
 
         {% if perms.webapp.change_comment or user == commnet.author %}
             <p><a href="{% url "webapp:comment_update_view" comment.pk %}">Изменить</a></p>

@@ -1,5 +1,7 @@
 asgiref==3.4.1
 Django==4.0
+django-currentuser==0.5.3
+Pillow==9.0.1
+pytz==2022.1
 sqlparse==0.4.2
 tzdata==2021.5
-Pillow==9.0.1

@@ -1,11 +1,10 @@
-from django.core.validators import MinLengthValidator
+from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from django.contrib.auth import get_user_model
-
-# Create your models here.
 from django.urls import reverse
-
+from django_currentuser.middleware import get_current_authenticated_user
 
 User = get_user_model()
 
@@ -16,6 +15,15 @@ class BaseModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Like(models.Model):
+    user = models.ForeignKey(get_user_model(),
+                             related_name='likes',
+                             on_delete=models.CASCADE)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
 
 
 class Article(BaseModel):
@@ -29,6 +37,44 @@ class Article(BaseModel):
         default=1,
         verbose_name="Автор",
     )
+    likes = GenericRelation(Like)
+
+    @staticmethod
+    def get_request_user():
+        return get_current_authenticated_user()
+
+    def get_object_type(self):
+        return ContentType.objects.get_for_model(self)
+
+    def add_like(self):
+        obj_type = self.get_object_type()
+        Like.objects.get_or_create(
+            content_type=obj_type, object_id=self.id, user=self.get_request_user())
+
+    def make_response(self):
+        response = {
+            'is_fan': self.is_fan(),
+            'total_likes': self.total_likes()
+        }
+        return response
+
+    def delete_like(self):
+        obj_type = ContentType.objects.get_for_model(self)
+        Like.objects.filter(
+            content_type=obj_type, object_id=self.id, user=self.get_request_user()
+        ).delete()
+
+    def is_fan(self) -> bool:
+        user = get_current_authenticated_user()
+        if not user:
+            return False
+        obj_type = ContentType.objects.get_for_model(self)
+        likes = Like.objects.filter(
+            content_type=obj_type, object_id=self.id, user=user).exists()
+        return likes
+
+    def total_likes(self):
+        return self.likes.count()
 
     def get_absolute_url(self):
         return reverse('webapp:article_view', kwargs={'pk': self.pk})
@@ -70,6 +116,44 @@ class Comment(BaseModel):
                                 related_name="comments",
                                 verbose_name="Статья",
                                 )
+    likes = GenericRelation(Like)
+
+    @staticmethod
+    def get_request_user():
+        return get_current_authenticated_user()
+
+    def get_object_type(self):
+        return ContentType.objects.get_for_model(self)
+
+    def add_like(self):
+        obj_type = self.get_object_type()
+        Like.objects.get_or_create(
+            content_type=obj_type, object_id=self.id, user=self.get_request_user())
+
+    def make_response(self):
+        response = {
+            'is_fan': self.is_fan(),
+            'total_likes': self.total_likes()
+        }
+        return response
+
+    def delete_like(self):
+        obj_type = ContentType.objects.get_for_model(self)
+        Like.objects.filter(
+            content_type=obj_type, object_id=self.id, user=self.get_request_user()
+        ).delete()
+
+    def is_fan(self) -> bool:
+        user = get_current_authenticated_user()
+        if not user:
+            return False
+        obj_type = ContentType.objects.get_for_model(self)
+        likes = Like.objects.filter(
+            content_type=obj_type, object_id=self.id, user=user).exists()
+        return likes
+
+    def total_likes(self):
+        return self.likes.count()
 
     class Meta:
         db_table = 'comments'

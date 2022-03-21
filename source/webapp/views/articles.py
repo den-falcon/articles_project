@@ -1,5 +1,4 @@
 from django.contrib.auth.mixins import (
-    LoginRequiredMixin,
     PermissionRequiredMixin
 )
 from django.urls import reverse_lazy
@@ -17,7 +16,7 @@ class IndexView(SearchView):
     paginate_by = 3
     paginate_orphans = 0
     search_fields = ["title__icontains", "author__icontains"]
-    ordering=["-updated_at"]
+    ordering = ["-updated_at"]
 
 
 class ArticleCreateView(PermissionRequiredMixin, CreateView):

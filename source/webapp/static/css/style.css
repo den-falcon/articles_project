@@ -4,6 +4,10 @@ body {
     color: #222222;
 }
 
+.like-heart {
+    color: #e4425c;
+}
+
 .pagination {
     text-align: center;
 }
