@@ -39,29 +39,18 @@ class Article(BaseModel):
     )
     likes = GenericRelation(Like)
 
-    @staticmethod
-    def get_request_user():
-        return get_current_authenticated_user()
-
     def get_object_type(self):
         return ContentType.objects.get_for_model(self)
 
     def add_like(self):
         obj_type = self.get_object_type()
         Like.objects.get_or_create(
-            content_type=obj_type, object_id=self.id, user=self.get_request_user())
-
-    def make_response(self):
-        response = {
-            'is_fan': self.is_fan(),
-            'total_likes': self.total_likes()
-        }
-        return response
+            content_type=obj_type, object_id=self.id, user=get_current_authenticated_user())
 
     def delete_like(self):
         obj_type = ContentType.objects.get_for_model(self)
         Like.objects.filter(
-            content_type=obj_type, object_id=self.id, user=self.get_request_user()
+            content_type=obj_type, object_id=self.id, user=get_current_authenticated_user()
         ).delete()
 
     def is_fan(self) -> bool:
@@ -75,6 +64,13 @@ class Article(BaseModel):
 
     def total_likes(self):
         return self.likes.count()
+
+    def make_response(self):
+        response = {
+            'is_fan': self.is_fan(),
+            'total_likes': self.total_likes()
+        }
+        return response
 
     def get_absolute_url(self):
         return reverse('webapp:article_view', kwargs={'pk': self.pk})
